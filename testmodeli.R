@@ -59,6 +59,9 @@ wszystkieOfertyVW<-wszystkieOfertyVW%>%select(-`Marka_pojazdu`)%>%droplevels()
 nrow(wszystkieOfertyVW)
 str(wszystkieOfertyVW)
 
+wszystkieOfertyVW<-na.omit(wszystkieOfertyVW)
+
+
 #install.packages("VIM")
 library(VIM)
 aggr(wszystkieOfertyVW, numbers=TRUE,
@@ -93,14 +96,37 @@ library(kknn)
 library(caret)
 #library(mlr)
 
-
 set.seed(123)
 sample<-sample.split(Y=wszystkieOfertyVW,SplitRatio = .75)
-trains<-subset(wszystkieOfertyVW,sample=TRUE)
-tests<-subset(wszystkieOfertyVW,sample=FALSE)
+trains<-subset(wszystkieOfertyVW,sample==TRUE)
+tests<-subset(wszystkieOfertyVW,sample==FALSE)
 ?randomForest
-#tworzymy po wszystkich zmiennych w zbiorze
+#tworzymy po wszystkich zmiennych w zbiorze - konieczny jest na.omit!!!
+
+sampleSmall<-sample.split(y=trains,SplitRatio=.5)
+trainsSmall<-subset(sampleSmall,sample==TRUE)
+nrow(trainsSmall)
+
+trains<-subset(wszystkieOfertyVW, sample=TRUE)
+
 regrRF<-randomForest(cena~.,data=trains)
+summary(regrRF)
+predictionsRF<-predict(regrRF,tests)
+myMAE<-mean(abs(tests$cena-predictionsRF))
+
+maeMean<-mean(abs(tests$cena-mean(trains$cena)))
+
+mean(trains$cena)
+mean(tests$cena)
+
+
+#najblizsi sasiedzi
+regrKNN<-train.kknn(cena~.,data=trains,kmax=20)
+predictionsKNN<-predict(regrKNN,tests)
+myMAEKNN<-mean(abs(tests$cena-predictionsKNN))
+
+
+#DALEJ NA NASTEPNYCH ZAJECIACH
 
 
 
